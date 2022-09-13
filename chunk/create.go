@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"sort"
 	"sync"
-
-	"github.com/yowcow/xsort/types"
 )
 
 func CreateChunkFiles(r io.Reader, chunkSize int, tmpDir string) ([]string, error) {
@@ -53,7 +51,7 @@ func CreateChunkFiles(r io.Reader, chunkSize int, tmpDir string) ([]string, erro
 	return files, nil
 }
 
-func createChunkFile(filename string, bytes types.Bytes) error {
+func createChunkFile(filename string, bytes Bytes) error {
 	w, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
@@ -61,12 +59,7 @@ func createChunkFile(filename string, bytes types.Bytes) error {
 	defer w.Close()
 
 	for _, b := range bytes {
-		_, err = w.Write(b)
-		if err != nil {
-			return err
-		}
-
-		_, err = w.Write([]byte("\n"))
+		_, err = w.Write(append(b, byte('\n')))
 		if err != nil {
 			return err
 		}
@@ -75,12 +68,12 @@ func createChunkFile(filename string, bytes types.Bytes) error {
 	return nil
 }
 
-func createChunkBytes(s *bufio.Scanner, chunkSize int) (types.Bytes, error) {
+func createChunkBytes(s *bufio.Scanner, chunkSize int) (Bytes, error) {
 	var curBuf [][]byte
 	var curSize int
 
 	for s.Scan() {
-		buf := s.Bytes()
+		buf := allocBytes(s.Bytes())
 		curBuf = append(curBuf, buf)
 		curSize += len(buf)
 
@@ -93,7 +86,7 @@ func createChunkBytes(s *bufio.Scanner, chunkSize int) (types.Bytes, error) {
 		return nil, io.EOF
 	}
 
-	sort.Sort(types.Bytes(curBuf))
+	sort.Sort(Bytes(curBuf))
 
 	return curBuf, nil
 }

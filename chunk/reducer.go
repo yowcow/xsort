@@ -1,9 +1,8 @@
 package chunk
 
 import (
+	"bytes"
 	"io"
-
-	"github.com/yowcow/xsort/types"
 )
 
 type Reducer struct {
@@ -24,12 +23,18 @@ func (m *Reducer) Next() ([]byte, error) {
 
 	for i := 0; i < m.count; i++ {
 		tmp := m.chunks[i].Head()
+		if tmp == nil {
+			continue
+		}
 		if b == nil {
 			b = tmp
 			c = m.chunks[i]
-		} else if types.CmpBytes(tmp, b) {
+			continue
+		}
+		if bytes.Compare(tmp, b) == -1 {
 			b = tmp
 			c = m.chunks[i]
+			continue
 		}
 	}
 

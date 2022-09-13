@@ -30,7 +30,7 @@ func (c *Chunk) Next() bool {
 	c.head = nil
 
 	if c.s.Scan() {
-		c.head = c.s.Bytes()
+		c.head = allocBytes(c.s.Bytes())
 		return true
 	}
 
