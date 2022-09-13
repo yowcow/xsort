@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestCreateChunks(t *testing.T) {
+func TestCreateChunkFiles(t *testing.T) {
 	cases := []struct {
 		title              string
 		inputFile          string
@@ -39,7 +39,7 @@ func TestCreateChunks(t *testing.T) {
 				t.Fatal("failed reading data:", err)
 			}
 
-			chunks, err := CreateChunks(r, c.chunkSize, tmpdir)
+			chunks, err := CreateChunkFiles(r, c.chunkSize, tmpdir)
 			if err != nil {
 				t.Error("expected no error but got:", err)
 			}

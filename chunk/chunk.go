@@ -1,33 +1,38 @@
 package chunk
 
 import (
-	"os"
-
-	"github.com/yowcow/xsort/types"
+	"bufio"
+	"io"
 )
 
 type Chunk struct {
-	file string
+	s    *bufio.Scanner
+	head []byte
 }
 
-func (c *Chunk) createFile(bytes types.Bytes) error {
-	w, err := os.OpenFile(c.file, os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer w.Close()
-
-	for _, b := range bytes {
-		_, err = w.Write(b)
-		if err != nil {
-			return err
-		}
-
-		_, err = w.Write([]byte("\n"))
-		if err != nil {
-			return err
-		}
+func NewChunk(r io.Reader) (*Chunk, error) {
+	s := bufio.NewScanner(r)
+	if !s.Scan() {
+		return nil, io.EOF
 	}
 
-	return nil
+	return &Chunk{
+		s:    s,
+		head: s.Bytes(),
+	}, nil
+}
+
+func (c *Chunk) Head() []byte {
+	return c.head
+}
+
+func (c *Chunk) Next() bool {
+	c.head = nil
+
+	if c.s.Scan() {
+		c.head = c.s.Bytes()
+		return true
+	}
+
+	return false
 }

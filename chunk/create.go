@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"sort"
 	"sync"
@@ -13,14 +14,14 @@ import (
 	"github.com/yowcow/xsort/types"
 )
 
-func CreateChunks(r io.Reader, chunkSize int, tmpDir string) ([]*Chunk, error) {
+func CreateChunkFiles(r io.Reader, chunkSize int, tmpDir string) ([]string, error) {
 	base, err := basename(8)
 	if err != nil {
 		return nil, err
 	}
 
 	var idx int
-	var chunks []*Chunk
+	var files []string
 	var wg sync.WaitGroup
 	s := bufio.NewScanner(r)
 
@@ -34,23 +35,44 @@ func CreateChunks(r io.Reader, chunkSize int, tmpDir string) ([]*Chunk, error) {
 		}
 
 		filename := filepath.Join(tmpDir, fmt.Sprintf("%s-%d", base, idx))
-		chunk := &Chunk{file: filename}
-
 		wg.Add(1)
-		go func(g *sync.WaitGroup) {
+
+		go func(file string, g *sync.WaitGroup) {
 			defer g.Done()
-			if err := chunk.createFile(bytes); err != nil {
+			if err := createChunkFile(file, bytes); err != nil {
 				panic(err)
 			}
-		}(&wg)
+		}(filename, &wg)
 
-		chunks = append(chunks, chunk)
+		files = append(files, filename)
 		idx++
 	}
 
 	wg.Wait()
 
-	return chunks, nil
+	return files, nil
+}
+
+func createChunkFile(filename string, bytes types.Bytes) error {
+	w, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer w.Close()
+
+	for _, b := range bytes {
+		_, err = w.Write(b)
+		if err != nil {
+			return err
+		}
+
+		_, err = w.Write([]byte("\n"))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func createChunkBytes(s *bufio.Scanner, chunkSize int) (types.Bytes, error) {

@@ -11,9 +11,15 @@ func (b Bytes) Len() int {
 }
 
 func (b Bytes) Less(i, j int) bool {
-	x := b[i]
+	return CmpBytes(b[i], b[j])
+}
+
+func (b Bytes) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
+}
+
+func CmpBytes(x, y []byte) bool {
 	xlen := len(x)
-	y := b[j]
 	ylen := len(y)
 
 	minlen := xlen
@@ -30,8 +36,4 @@ func (b Bytes) Less(i, j int) bool {
 	}
 
 	return xlen < ylen
-}
-
-func (b Bytes) Swap(i, j int) {
-	b[i], b[j] = b[j], b[i]
 }
