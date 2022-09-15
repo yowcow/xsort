@@ -8,8 +8,15 @@ import (
 	"github.com/yowcow/xsort/chunk"
 )
 
-func Sort(r io.Reader, w io.Writer, chunkSize int, tmpDir string) error {
-	files, err := chunk.CreateChunkFiles(r, chunkSize, tmpDir)
+type SortOptions struct {
+	Input     io.Reader
+	Output    io.Writer
+	ChunkSize int64
+	TmpDir    string
+}
+
+func Sort(opt *SortOptions) error {
+	files, err := chunk.CreateChunkFiles(opt.Input, opt.ChunkSize, opt.TmpDir)
 	if err != nil {
 		return err
 	}
@@ -20,6 +27,7 @@ func Sort(r io.Reader, w io.Writer, chunkSize int, tmpDir string) error {
 		if err != nil {
 			return err
 		}
+		defer r.Close()
 
 		chunk, err := chunk.NewChunk(r)
 		if err != nil {
@@ -40,7 +48,7 @@ func Sort(r io.Reader, w io.Writer, chunkSize int, tmpDir string) error {
 			return err
 		}
 
-		w.Write(append(b, byte('\n')))
+		opt.Output.Write(append(b, byte('\n')))
 	}
 
 	return nil

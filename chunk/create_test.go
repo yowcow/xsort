@@ -9,7 +9,7 @@ func TestCreateChunkFiles(t *testing.T) {
 	cases := []struct {
 		title              string
 		inputFile          string
-		chunkSize          int
+		chunkSize          int64
 		expectedChunkCount int
 	}{
 		{

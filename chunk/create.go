@@ -12,7 +12,7 @@ import (
 	"sync"
 )
 
-func CreateChunkFiles(r io.Reader, chunkSize int, tmpDir string) ([]string, error) {
+func CreateChunkFiles(r io.Reader, chunkSize int64, tmpDir string) ([]string, error) {
 	base, err := basename(8)
 	if err != nil {
 		return nil, err
@@ -68,14 +68,14 @@ func createChunkFile(filename string, bytes Bytes) error {
 	return nil
 }
 
-func createChunkBytes(s *bufio.Scanner, chunkSize int) (Bytes, error) {
+func createChunkBytes(s *bufio.Scanner, chunkSize int64) (Bytes, error) {
 	var curBuf [][]byte
-	var curSize int
+	var curSize int64
 
 	for s.Scan() {
 		buf := allocBytes(s.Bytes())
 		curBuf = append(curBuf, buf)
-		curSize += len(buf)
+		curSize += int64(len(buf))
 
 		if curSize >= chunkSize {
 			break
