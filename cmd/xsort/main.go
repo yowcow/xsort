@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -24,30 +23,28 @@ func init() {
 }
 
 func main() {
-	var r io.Reader
-	var w io.Writer
-	var c int
-	var d string
+	var opt xsort.SortOptions
 
 	if inputFile == "" {
-		r = os.Stdin
+		opt.Input = os.Stdin
 	} else {
 		f, err := os.Open(inputFile)
 		if err != nil {
 			panic(err)
 		}
-		r = f
+		defer f.Close()
+		opt.Input = f
 	}
 
 	if outputFile == "" {
-		w = os.Stdout
+		opt.Output = os.Stdout
 	} else {
 		f, err := os.OpenFile(outputFile, os.O_CREATE|os.O_WRONLY, 0644)
 		if err != nil {
 			panic(err)
 		}
 		defer f.Close()
-		w = f
+		opt.Output = f
 	}
 
 	if strings.HasSuffix(chunkSize, "M") {
@@ -56,13 +53,13 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		c = size * 1000000
+		opt.ChunkSize = int64(size * xsort.MiB)
 	} else {
 		size, err := strconv.Atoi(chunkSize)
 		if err != nil {
 			panic(err)
 		}
-		c = size
+		opt.ChunkSize = int64(size)
 	}
 
 	if tmpDir == "" {
@@ -71,10 +68,10 @@ func main() {
 			panic(err)
 		}
 		defer os.RemoveAll(dir)
-		d = dir
+		opt.TmpDir = dir
 	} else {
-		d = tmpDir
+		opt.TmpDir = tmpDir
 	}
 
-	xsort.Sort(r, w, c, d)
+	xsort.Sort(&opt)
 }
