@@ -20,6 +20,7 @@ func Sort(r io.Reader, w io.Writer, chunkSize int, tmpDir string) error {
 		if err != nil {
 			return err
 		}
+		defer r.Close()
 
 		chunk, err := chunk.NewChunk(r)
 		if err != nil {
