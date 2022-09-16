@@ -78,18 +78,17 @@ func TestReducer(t *testing.T) {
 
 	for _, c := range cases {
 		t.Run(c.title, func(t *testing.T) {
-			var chunks []*Chunk
+			var m Reducer
 			for _, input := range c.inputs {
 				r := strings.NewReader(input)
 				chunk, err := NewChunk(r)
 				if err != nil {
 					t.Fatal("expected no error but got:", err)
 				}
-				chunks = append(chunks, chunk)
+				m.AddChunk(chunk)
 			}
 
 			var actual []string
-			m := NewReducer(chunks)
 			for {
 				output, err := m.Next()
 				if errors.Is(err, io.EOF) {
