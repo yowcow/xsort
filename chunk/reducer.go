@@ -5,35 +5,32 @@ import (
 	"io"
 )
 
-type Reducer struct {
-	chunks []*Chunk
-	count  int
-}
+type Reducer []*Chunk
 
-func NewReducer(chunks []*Chunk) *Reducer {
-	return &Reducer{
-		chunks: chunks,
-		count:  len(chunks),
-	}
+func (m *Reducer) AddChunk(chunk *Chunk) {
+	*m = append(*m, chunk)
 }
 
 func (m *Reducer) Next() ([]byte, error) {
+	chunks := *m
+	size := len(chunks)
+
 	var b []byte
 	var c *Chunk
 
-	for i := 0; i < m.count; i++ {
-		tmp := m.chunks[i].Head()
+	for i := 0; i < size; i++ {
+		tmp := chunks[i].Head()
 		if tmp == nil {
 			continue
 		}
 		if b == nil {
 			b = tmp
-			c = m.chunks[i]
+			c = chunks[i]
 			continue
 		}
 		if bytes.Compare(tmp, b) == -1 {
 			b = tmp
-			c = m.chunks[i]
+			c = chunks[i]
 			continue
 		}
 	}
