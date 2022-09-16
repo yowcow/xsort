@@ -21,7 +21,7 @@ func Sort(opt *SortOptions) error {
 		return err
 	}
 
-	var chunks []*chunk.Chunk
+	var reducer chunk.Reducer
 	for _, f := range files {
 		r, err := os.Open(f)
 		if err != nil {
@@ -34,10 +34,8 @@ func Sort(opt *SortOptions) error {
 			return err
 		}
 
-		chunks = append(chunks, chunk)
+		reducer.AddChunk(chunk)
 	}
-
-	reducer := chunk.NewReducer(chunks)
 
 	for {
 		b, err := reducer.Next()
