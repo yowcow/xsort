@@ -45,8 +45,9 @@ func Sort(opt *SortOptions) error {
 		if err != nil {
 			return err
 		}
-
-		opt.Output.Write(append(b, byte('\n')))
+		if _, err := opt.Output.Write(append(b, byte('\n'))); err != nil {
+			return err
+		}
 	}
 
 	return nil
