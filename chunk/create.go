@@ -9,7 +9,8 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"sync"
+
+	"golang.org/x/sync/errgroup"
 )
 
 func CreateChunkFiles(r io.Reader, chunkSize int64, tmpDir string) ([]string, error) {
@@ -20,7 +21,7 @@ func CreateChunkFiles(r io.Reader, chunkSize int64, tmpDir string) ([]string, er
 
 	var idx int
 	var files []string
-	var wg sync.WaitGroup
+	var eg errgroup.Group
 	s := bufio.NewScanner(r)
 
 	for {
@@ -32,23 +33,19 @@ func CreateChunkFiles(r io.Reader, chunkSize int64, tmpDir string) ([]string, er
 			return nil, err
 		}
 
-		filename := filepath.Join(tmpDir, fmt.Sprintf("%s-%d", base, idx))
-		wg.Add(1)
-
-		go func(file string, g *sync.WaitGroup) {
-			defer g.Done()
-			if err := createChunkFile(file, bytes); err != nil {
-				panic(err)
-			}
-		}(filename, &wg)
-
-		files = append(files, filename)
+		file := filepath.Join(tmpDir, fmt.Sprintf("%s-%d", base, idx))
+		files = append(files, file)
 		idx++
+
+		eg.Go(func() error {
+			if err := createChunkFile(file, bytes); err != nil {
+				return err
+			}
+			return nil
+		})
 	}
 
-	wg.Wait()
-
-	return files, nil
+	return files, eg.Wait()
 }
 
 func createChunkFile(filename string, bytes Bytes) error {
@@ -59,8 +56,7 @@ func createChunkFile(filename string, bytes Bytes) error {
 	defer w.Close()
 
 	for _, b := range bytes {
-		_, err = w.Write(append(b, byte('\n')))
-		if err != nil {
+		if _, err = w.Write(append(b, byte('\n'))); err != nil {
 			return err
 		}
 	}
